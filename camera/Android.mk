@@ -57,3 +57,9 @@ LOCAL_C_INCLUDES += \
 LOCAL_MODULE:= libcamera_client
 
 include $(BUILD_SHARED_LIBRARY)
+
+LOCAL_CC := 
+$$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-gcc$$(HOST_EXECUTABLE_SUFFIX) 
+LOCAL_CXX := 
+$$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-g++$$(HOST_EXECUTABLE_SUFFIX)
+
