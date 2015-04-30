@@ -361,6 +361,7 @@ MPEG4Writer::MPEG4Writer(const char *filename)
       mWriterThreadStarted(false),
       mOffset(0),
       mMdatOffset(0),
+      mMoovBoxBuffer(NULL),
       mEstimatedMoovBoxSize(0),
       mInterleaveDurationUs(1000000),
       mLatitudex10000(0),
@@ -389,6 +390,7 @@ MPEG4Writer::MPEG4Writer(int fd)
       mWriterThreadStarted(false),
       mOffset(0),
       mMdatOffset(0),
+      mMoovBoxBuffer(NULL),
       mEstimatedMoovBoxSize(0),
       mInterleaveDurationUs(1000000),
       mLatitudex10000(0),
@@ -410,6 +412,8 @@ MPEG4Writer::~MPEG4Writer() {
         mTracks.erase(it);
     }
     mTracks.clear();
+    free(mMoovBoxBuffer);
+    mMoovBoxBuffer = NULL;
 }
 
 status_t MPEG4Writer::dump(
@@ -851,6 +855,8 @@ void MPEG4Writer::release() {
     mFd = -1;
     mInitCheck = NO_INIT;
     mStarted = false;
+    free(mMoovBoxBuffer);
+    mMoovBoxBuffer = NULL;
 }
 
 status_t MPEG4Writer::reset() {
