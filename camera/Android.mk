@@ -58,7 +58,12 @@ LOCAL_MODULE:= libcamera_client
 
 include $(BUILD_SHARED_LIBRARY)
 
-$(combo_2nd_arch_prefix)TARGET_NDK_GCC_VERSION := 4.8
 
-LOCAL_CC := $$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-gcc$$(HOST_EXECUTABLE_SUFFIX) 
+
+LOCAL_CC := $$(TARGET_TOOLCHAIN_ROOT)/..arm-linux-androideabi-4.8/bin/arm-linux-androideabi-gcc$$(HOST_EXECUTABLE_SUFFIX)
 LOCAL_CXX := $$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-g++$$(HOST_EXECUTABLE_SUFFIX)
+LOCAL_AR := $$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-ar$$(HOST_EXECUTABLE_SUFFIX)
+LOCAL_OBJCOPY := $$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-objcopy$$(HOST_EXECUTABLE_SUFFIX)
+LOCAL_LD := $$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-ld$$(HOST_EXECUTABLE_SUFFIX)
+LOCAL_READELF := $$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-readelf$$(HOST_EXECUTABLE_SUFFIX)
+LOCAL_STRIP := $$(TARGET_TOOLCHAIN_ROOT)/../arm-linux-androideabi-4.8/bin/arm-linux-androideabi-strip$$(HOST_EXECUTABLE_SUFFIX)
