@@ -1910,7 +1910,7 @@ int64_t AudioMixer::calculateOutputPTS(const track_t& t, int64_t basePTS,
  * Perhaps just stick with a single for loop.
  */
 
-// Needs to derive a compile time constant (constexpr).  Could be targeted to go
+// Needs to derive a compile time constant (CONSTEXPR).  Could be targeted to go
 // to a MONOVOL mixtype based on MAX_NUM_VOLUMES, but that's an unnecessary complication.
 #define MIXTYPE_MONOVOL(mixtype) (mixtype == MIXTYPE_MULTI ? MIXTYPE_MULTI_MONOVOL : \
         mixtype == MIXTYPE_MULTI_SAVEONLY ? MIXTYPE_MULTI_SAVEONLY_MONOVOL : mixtype)
@@ -2133,7 +2133,7 @@ void AudioMixer::track__Resample(track_t* t, TO* out, size_t outFrameCount, TO* 
  * TA: int32_t (Q4.27)
  */
 template <int MIXTYPE, typename TO, typename TI, typename TA>
-void AudioMixer::track__NoResample(track_t* t, TO* out, size_t frameCount,
+void __attribute__((optimize("no-tree-vectorize"))) AudioMixer::track__NoResample(track_t* t, TO* out, size_t frameCount,
         TO* temp __unused, TA* aux)
 {
     ALOGVV("track__NoResample\n");
