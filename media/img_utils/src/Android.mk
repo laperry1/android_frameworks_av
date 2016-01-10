@@ -50,7 +50,7 @@ LOCAL_CFLAGS += \
   -Werror \
   -fvisibility=hidden
 
-ifneq ($(filter userdebug eng,$(TARGET_BUILD_VARIANT)),)
+ifneq ($(filter eng,$(TARGET_BUILD_VARIANT)),)
     # Enable assert() in eng builds
     LOCAL_CFLAGS += -UNDEBUG -DLOG_NDEBUG=1
 endif
