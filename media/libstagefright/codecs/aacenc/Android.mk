@@ -74,8 +74,6 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/inc \
 	$(LOCAL_PATH)/basic_op
 
-LOCAL_CFLAGS += -Werror
-
 include $(BUILD_STATIC_LIBRARY)
 
 ################################################################################
@@ -100,8 +98,6 @@ ifeq ($(AAC_LIBRARY), fraunhofer)
 
   LOCAL_CFLAGS :=
 
-  LOCAL_CFLAGS += -Werror
-
   LOCAL_STATIC_LIBRARIES := libFraunhoferAAC
 
   LOCAL_SHARED_LIBRARIES := \
@@ -123,8 +119,6 @@ else # visualon
           frameworks/native/include/media/openmax
 
   LOCAL_CFLAGS := -DOSCL_IMPORT_REF=
-
-  LOCAL_CFLAGS += -Werror
 
   LOCAL_STATIC_LIBRARIES := \
           libstagefright_aacenc

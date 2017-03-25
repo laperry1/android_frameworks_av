@@ -1,0 +1,21 @@
+--- services/audiopolicy/service/AudioPolicyInterfaceImpl.cpp
++++ services/audiopolicy/service/AudioPolicyInterfaceImpl.cpp
+@@ -417,7 +417,6 @@ void AudioPolicyService::releaseInput(audio_io_handle_t input,
+     sp<AudioPolicyEffects>audioPolicyEffects;
+     {
+         Mutex::Autolock _l(mLock);
+-        mAudioPolicyManager->releaseInput(input, session);
+         audioPolicyEffects = mAudioPolicyEffects;
+     }
+     if (audioPolicyEffects != 0) {
+@@ -427,6 +426,10 @@ void AudioPolicyService::releaseInput(audio_io_handle_t input,
+             ALOGW("Failed to release effects on input %d", input);
+         }
+     }
++    {
++        Mutex::Autolock _l(mLock);
++        mAudioPolicyManager->releaseInput(input, session);
++    }
+ }
+ 
+ status_t AudioPolicyService::initStreamVolume(audio_stream_type_t stream,

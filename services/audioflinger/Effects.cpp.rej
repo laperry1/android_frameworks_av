@@ -1,16 +1,54 @@
 --- services/audioflinger/Effects.cpp
 +++ services/audioflinger/Effects.cpp
-@@ -600,6 +600,13 @@ status_t AudioFlinger::EffectModule::command(uint32_t cmdCode,
-         android_errorWriteLog(0x534e4554, "29251553");
-         return -EINVAL;
-     }
-+    if (cmdCode == EFFECT_CMD_GET_PARAM &&
-+            (sizeof(effect_param_t) > cmdSize ||
-+                    ((effect_param_t *)pCmdData)->psize > cmdSize
-+                                                          - sizeof(effect_param_t))) {
-+        android_errorWriteLog(0x534e4554, "32438594");
-+        return -EINVAL;
+@@ -1284,6 +1284,24 @@ status_t AudioFlinger::EffectHandle::command(uint32_t cmdCode,
+     ALOGVV("command(), cmdCode: %d, mHasControl: %d, mEffect: %p",
+             cmdCode, mHasControl, mEffect.unsafe_get());
+ 
++    if (cmdCode == EFFECT_CMD_ENABLE) {
++        if (*replySize < sizeof(int)) {
++            android_errorWriteLog(0x534e4554, "32095713");
++            return BAD_VALUE;
++        }
++        *(int *)pReplyData = NO_ERROR;
++        *replySize = sizeof(int);
++        return enable();
++    } else if (cmdCode == EFFECT_CMD_DISABLE) {
++        if (*replySize < sizeof(int)) {
++            android_errorWriteLog(0x534e4554, "32095713");
++            return BAD_VALUE;
++        }
++        *(int *)pReplyData = NO_ERROR;
++        *replySize = sizeof(int);
++        return disable();
 +    }
-     if ((cmdCode == EFFECT_CMD_SET_PARAM
-             || cmdCode == EFFECT_CMD_SET_PARAM_DEFERRED) &&  // DEFERRED not generally used
-         (sizeof(effect_param_t) > cmdSize
++
+     AutoMutex _l(mLock);
+     sp<EffectModule> effect = mEffect.promote();
+     if (effect == 0 || mDisconnected) {
+@@ -1299,6 +1317,13 @@ status_t AudioFlinger::EffectHandle::command(uint32_t cmdCode,
+ 
+     // handle commands that are not forwarded transparently to effect engine
+     if (cmdCode == EFFECT_CMD_SET_PARAM_COMMIT) {
++        if (*replySize < sizeof(int)) {
++            android_errorWriteLog(0x534e4554, "32095713");
++            return BAD_VALUE;
++        }
++        *(int *)pReplyData = NO_ERROR;
++        *replySize = sizeof(int);
++
+         // No need to trylock() here as this function is executed in the binder thread serving a
+         // particular client process:  no risk to block the whole media server process or mixer
+         // threads if we are stuck here
+@@ -1347,12 +1372,6 @@ status_t AudioFlinger::EffectHandle::command(uint32_t cmdCode,
+         mCblk->serverIndex = 0;
+         mCblk->clientIndex = 0;
+         return status;
+-    } else if (cmdCode == EFFECT_CMD_ENABLE) {
+-        *(int *)pReplyData = NO_ERROR;
+-        return enable();
+-    } else if (cmdCode == EFFECT_CMD_DISABLE) {
+-        *(int *)pReplyData = NO_ERROR;
+-        return disable();
+     }
+ 
+     return effect->command(cmdCode, cmdSize, pCmdData, replySize, pReplyData);
