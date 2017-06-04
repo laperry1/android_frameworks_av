@@ -1,44 +1,36 @@
 --- media/libeffects/lvm/wrapper/Bundle/EffectBundle.cpp
 +++ media/libeffects/lvm/wrapper/Bundle/EffectBundle.cpp
-@@ -2357,8 +2357,12 @@ int Equalizer_getParameter(EffectContext     *pContext,
+@@ -1301,17 +1301,25 @@ int VirtualizerForceVirtualizationMode(EffectContext *pContext, audio_devices_t
+ //                            horizontal plane, +90 is directly above the user, -90 below
+ //
+ //----------------------------------------------------------------------------
+-void VirtualizerGetSpeakerAngles(audio_channel_mask_t channelMask __unused,
++void VirtualizerGetSpeakerAngles(audio_channel_mask_t channelMask,
+         audio_devices_t deviceType __unused, int32_t *pSpeakerAngles) {
+     // the channel count is guaranteed to be 1 or 2
+     // the device is guaranteed to be of type headphone
+-    // this virtualizer is always 2in with speakers at -90 and 90deg of azimuth, 0deg of elevation
+-    *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_FRONT_LEFT;
+-    *pSpeakerAngles++ = -90; // azimuth
+-    *pSpeakerAngles++ = 0;   // elevation
+-    *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_FRONT_RIGHT;
+-    *pSpeakerAngles++ = 90;  // azimuth
+-    *pSpeakerAngles   = 0;   // elevation
++    // this virtualizer is always using 2 virtual speakers at -90 and 90deg of azimuth, 0deg of
++    // elevation but the return information is sized for nbChannels * 3, so we have to consider
++    // the (false here) case of a single channel, and return only 3 fields.
++    if (audio_channel_count_from_out_mask(channelMask) == 1) {
++        *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_MONO; // same as FRONT_LEFT
++        *pSpeakerAngles++ = 0; // azimuth
++        *pSpeakerAngles = 0; // elevation
++    } else {
++        *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_FRONT_LEFT;
++        *pSpeakerAngles++ = -90; // azimuth
++        *pSpeakerAngles++ = 0;   // elevation
++        *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_FRONT_RIGHT;
++        *pSpeakerAngles++ = 90;  // azimuth
++        *pSpeakerAngles   = 0;   // elevation
++    }
+ }
  
-     case EQ_PARAM_BAND_LEVEL:
-         param2 = *pParamTemp;
--        if (param2 >= FIVEBAND_NUMBANDS) {
-+        if (param2 < 0 || param2 >= FIVEBAND_NUMBANDS) {
-             status = -EINVAL;
-+            if (param2 < 0) {
-+                android_errorWriteLog(0x534e4554, "32438598");
-+                ALOGW("\tERROR Equalizer_getParameter() EQ_PARAM_BAND_LEVEL band %d", param2);
-+            }
-             break;
-         }
-         *(int16_t *)pValue = (int16_t)EqualizerGetBandLevel(pContext, param2);
-@@ -2368,8 +2372,12 @@ int Equalizer_getParameter(EffectContext     *pContext,
- 
-     case EQ_PARAM_CENTER_FREQ:
-         param2 = *pParamTemp;
--        if (param2 >= FIVEBAND_NUMBANDS) {
-+        if (param2 < 0 || param2 >= FIVEBAND_NUMBANDS) {
-             status = -EINVAL;
-+            if (param2 < 0) {
-+                android_errorWriteLog(0x534e4554, "32436341");
-+                ALOGW("\tERROR Equalizer_getParameter() EQ_PARAM_CENTER_FREQ band %d", param2);
-+            }
-             break;
-         }
-         *(int32_t *)pValue = EqualizerGetCentreFrequency(pContext, param2);
-@@ -2379,8 +2387,12 @@ int Equalizer_getParameter(EffectContext     *pContext,
- 
-     case EQ_PARAM_BAND_FREQ_RANGE:
-         param2 = *pParamTemp;
--        if (param2 >= FIVEBAND_NUMBANDS) {
-+        if (param2 < 0 || param2 >= FIVEBAND_NUMBANDS) {
-             status = -EINVAL;
-+            if (param2 < 0) {
-+                android_errorWriteLog(0x534e4554, "32247948");
-+                ALOGW("\tERROR Equalizer_getParameter() EQ_PARAM_BAND_FREQ_RANGE band %d", param2);
-+            }
-             break;
-         }
-         EqualizerGetBandFreqRange(pContext, param2, (uint32_t *)pValue, ((uint32_t *)pValue + 1));
+ //----------------------------------------------------------------------------
