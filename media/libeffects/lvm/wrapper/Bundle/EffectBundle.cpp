@@ -1465,17 +1465,25 @@ int VirtualizerForceVirtualizationMode(EffectContext *pContext, audio_devices_t 
 //                            horizontal plane, +90 is directly above the user, -90 below
 //
 //----------------------------------------------------------------------------
-void VirtualizerGetSpeakerAngles(audio_channel_mask_t channelMask __unused,
+void VirtualizerGetSpeakerAngles(audio_channel_mask_t channelMask,
         audio_devices_t deviceType __unused, int32_t *pSpeakerAngles) {
     // the channel count is guaranteed to be 1 or 2
     // the device is guaranteed to be of type headphone
-    // this virtualizer is always 2in with speakers at -90 and 90deg of azimuth, 0deg of elevation
-    *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_FRONT_LEFT;
-    *pSpeakerAngles++ = -90; // azimuth
-    *pSpeakerAngles++ = 0;   // elevation
-    *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_FRONT_RIGHT;
-    *pSpeakerAngles++ = 90;  // azimuth
-    *pSpeakerAngles   = 0;   // elevation
+    // this virtualizer is always using 2 virtual speakers at -90 and 90deg of azimuth, 0deg of
+    // elevation but the return information is sized for nbChannels * 3, so we have to consider
+    // the (false here) case of a single channel, and return only 3 fields.
+    if (audio_channel_count_from_out_mask(channelMask) == 1) {
+        *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_MONO; // same as FRONT_LEFT
+        *pSpeakerAngles++ = 0; // azimuth
+        *pSpeakerAngles = 0; // elevation
+    } else {
+        *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_FRONT_LEFT;
+        *pSpeakerAngles++ = -90; // azimuth
+        *pSpeakerAngles++ = 0;   // elevation
+        *pSpeakerAngles++ = (int32_t) AUDIO_CHANNEL_OUT_FRONT_RIGHT;
+        *pSpeakerAngles++ = 90;  // azimuth
+        *pSpeakerAngles   = 0;   // elevation
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -3124,10 +3132,6 @@ int Effect_command(effect_handle_t  self,
             //ALOGV("\tEffect_command cmdCode Case: EFFECT_CMD_GET_PARAM start");
 
             effect_param_t *p = (effect_param_t *)pCmdData;
-            if (SIZE_MAX - sizeof(effect_param_t) < (size_t)p->psize) {
-                android_errorWriteLog(0x534e4554, "26347509");
-                return -EINVAL;
-            }
             if (pCmdData == NULL || cmdSize < sizeof(effect_param_t) ||
                     cmdSize < (sizeof(effect_param_t) + p->psize) ||
                     pReplyData == NULL || replySize == NULL ||
@@ -3135,13 +3139,32 @@ int Effect_command(effect_handle_t  self,
                 ALOGV("\tLVM_ERROR : EFFECT_CMD_GET_PARAM: ERROR");
                 return -EINVAL;
             }
+            if (EFFECT_PARAM_SIZE_MAX - sizeof(effect_param_t) < (size_t)p->psize) {
+                android_errorWriteLog(0x534e4554, "26347509");
+                ALOGV("\tLVM_ERROR : EFFECT_CMD_GET_PARAM: psize too big");
+                return -EINVAL;
+            }
+            uint32_t paddedParamSize = ((p->psize + sizeof(int32_t) - 1) / sizeof(int32_t)) *
+                    sizeof(int32_t);
+            if ((EFFECT_PARAM_SIZE_MAX - sizeof(effect_param_t) < paddedParamSize) ||
+                (EFFECT_PARAM_SIZE_MAX - sizeof(effect_param_t) - paddedParamSize <
+                    p->vsize)) {
+                ALOGV("\tLVM_ERROR : EFFECT_CMD_GET_PARAM: padded_psize or vsize too big");
+                return -EINVAL;
+            }
+            uint32_t expectedReplySize = sizeof(effect_param_t) + paddedParamSize + p->vsize;
+            if (*replySize < expectedReplySize) {
+                ALOGV("\tLVM_ERROR : EFFECT_CMD_GET_PARAM: min. replySize %u, got %u bytes",
+                        expectedReplySize, *replySize);
+                android_errorWriteLog(0x534e4554, "32705438");
+                return -EINVAL;
+            }
 
             memcpy(pReplyData, pCmdData, sizeof(effect_param_t) + p->psize);
 
             p = (effect_param_t *)pReplyData;
 
-            int voffset = ((p->psize - 1) / sizeof(int32_t) + 1) * sizeof(int32_t);
-
+            uint32_t voffset = paddedParamSize;
             if(pContext->EffectType == LVM_BASS_BOOST){
                 p->status = android::BassBoost_getParameter(pContext,
                                                             p->data,
